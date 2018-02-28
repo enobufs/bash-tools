@@ -1,0 +1,14 @@
+#!/bin/bash
+
+. ./progbar
+
+_start=0
+_end=1000
+
+progbar_init
+for number in $(seq ${_start} ${_end})
+do
+    sleep 0.001
+    progbar_show ${number} ${_end}
+done
+printf '\nFinished!\n'
