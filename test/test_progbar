@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ./progbar
+. ../bin/progbar
 
 _start=0
 _end=1000

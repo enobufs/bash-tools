@@ -1,0 +1,47 @@
+#!/bin/bash
+DIRNAME=output
+SIZE_MB=8
+NUM_FILES=10000
+
+# Help
+show_help() {
+    echo "Usage: mkdummies [-s size_MB] [-d output_dir] [-h]"
+}
+
+# Commandline parsing
+OPTIND=1 # Reset in case getopts has been used previously in the shell.1
+while getopts "h?s:d:n:" opt; do
+    case "$opt" in
+    h|\?)
+        show_help
+        exit 0
+        ;;
+    s)  SIZE_MB=$OPTARG
+        ;;
+    d)  DIRNAME=$OPTARG
+        ;;
+    n)  NUM_FILES=$OPTARG
+        ;;
+    esac
+done
+
+# Import dependencies
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+. $DIR/progbar
+
+progbar_init
+
+mkdir -p $DIRNAME
+pushd $DIRNAME > /dev/null
+for i in $(seq 1 $NUM_FILES); do
+    zi=$(printf "%06d" $i)
+    fn="file$zi.dat"
+    cn="$fn.md5"
+    dd if=/dev/urandom of=$fn bs=1048576 count=$SIZE_MB > /dev/null 2>&1
+    md5sum $fn > $cn
+    progbar_show $i $NUM_FILES
+done
+
+progbar_init
+
+popd > /dev/null
