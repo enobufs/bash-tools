@@ -1,16 +1,18 @@
 #!/bin/bash
 DIRNAME=output
 SIZE_MB=8
-NUM_FILES=10000
+NUM_FILES=10
+MD5=md5sum
+GEN_MD5=0
 
 # Help
 show_help() {
-    echo "Usage: mkdummies [-s size_MB] [-d output_dir] [-h]"
+    echo "Usage: mkdummies [-s size_MB] [-d output_dir] [-n num_files] [-h]"
 }
 
 # Commandline parsing
 OPTIND=1 # Reset in case getopts has been used previously in the shell.1
-while getopts "h?s:d:n:" opt; do
+while getopts "h?s:d:n:g" opt; do
     case "$opt" in
     h|\?)
         show_help
@@ -22,26 +24,34 @@ while getopts "h?s:d:n:" opt; do
         ;;
     n)  NUM_FILES=$OPTARG
         ;;
+    g)  GEN_MD5=1
+        ;;
     esac
 done
+
+# Determine MD5 command
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    MD5=md5
+fi
 
 # Import dependencies
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 . $DIR/progbar
 
-progbar_init
-
 mkdir -p $DIRNAME
 pushd $DIRNAME > /dev/null
+progbar_init
 for i in $(seq 1 $NUM_FILES); do
     zi=$(printf "%06d" $i)
     fn="file$zi.dat"
-    cn="$fn.md5"
+
     dd if=/dev/urandom of=$fn bs=1048576 count=$SIZE_MB > /dev/null 2>&1
-    md5sum $fn > $cn
+
+    if [[ $GEN_MD5 -eq 1 ]]; then
+        MD5 $fn > $fn.md5
+    fi
     progbar_show $i $NUM_FILES
 done
 
 progbar_init
-
 popd > /dev/null
